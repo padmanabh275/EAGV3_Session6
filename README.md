@@ -266,4 +266,4 @@ Use this sequence during recording:
 
 Add your recording URL here:
 
-- `https://youtu.be/<replace-with-your-demo-id>`
+- `https://youtu.be/2Yfq-6mn61Q`
