@@ -1,0 +1,7 @@
+state/
+sandbox/
+usage.json
+.env
+.venv/
+__pycache__/
+*.pyc

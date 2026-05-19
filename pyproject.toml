@@ -1,0 +1,21 @@
+[project]
+name = "session6-agent"
+version = "0.1.0"
+description = "Session 6 four-layer agent using LLM Gateway V3 and MCP stdio tools"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "pydantic>=2.6",
+  "httpx>=0.28.0",
+  "python-dotenv>=1.0.1",
+  "fastapi>=0.115.0",
+  "uvicorn>=0.30.0",
+  "jsonschema>=4.23.0",
+  "mcp>=1.9.0",
+  "ddgs>=9.0.0",
+  "crawl4ai>=0.7.0",
+  "tavily-python>=0.7.0",
+]
+
+[tool.uv]
+package = false
