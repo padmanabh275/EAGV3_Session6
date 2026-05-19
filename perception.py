@@ -24,6 +24,25 @@ User query:
 {user_query}
 """
 
+_FACTUAL_LOOKUP_HINTS = (
+    "capital of",
+    "who is",
+    "who was",
+    "when did",
+    "when was",
+    "what is the",
+    "how many",
+    "population of",
+    "weather in",
+    "latest news",
+    "current price",
+)
+
+
+def _looks_like_factual_lookup(query: str) -> bool:
+    lowered = query.lower()
+    return any(hint in lowered for hint in _FACTUAL_LOOKUP_HINTS)
+
 
 def run_perception_layer(llm: LLM, payload: PerceptionInput) -> PerceptionOutput:
     try:
@@ -67,6 +86,16 @@ def run_perception_layer(llm: LLM, payload: PerceptionInput) -> PerceptionOutput
                 requires_tool=True,
                 suggested_tool=ToolName.CURRENCY_CONVERT,
                 confidence=0.6,
+            )
+        if _looks_like_factual_lookup(query):
+            return PerceptionOutput(
+                task_type=TaskType.TOOL_REQUIRED,
+                normalized_query=payload.user_query.strip(),
+                memory_key=None,
+                memory_value=None,
+                requires_tool=True,
+                suggested_tool=ToolName.WEB_SEARCH,
+                confidence=0.65,
             )
         return PerceptionOutput(
             task_type=TaskType.DIRECT_ANSWER,

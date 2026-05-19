@@ -126,6 +126,8 @@ You can run **any** user question through the same four-layer loop (not only ass
 
 Assignment-only shortcuts (Paris, UTC time, memory write/read overrides) apply **only** to targets `A`, `B`, `C_WRITE`, `C_READ`, `D`, not to `LIVE` ad-hoc runs.
 
+Factual `LIVE` questions (e.g. “capital of …”) route to the MCP `web_search` tool (Tavily, DuckDuckGo fallback). Set `TAVILY_API_KEY` in `.env` for best results.
+
 ### Via demo API
 
 ```bash
