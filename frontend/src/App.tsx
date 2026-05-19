@@ -7,6 +7,7 @@ import {
   fetchGatewayStatus,
   resetState,
   runAllQueries,
+  runCustomChat,
   runSingleQuery,
 } from "./api";
 import type { GatewayProviders, GatewayRouters, GatewayStatus, ProjectMeta, RunResponse, StateSummary } from "./types";
@@ -32,6 +33,8 @@ function App() {
   const [runResponse, setRunResponse] = useState<RunResponse | null>(null);
   const [selectedTraceQuery, setSelectedTraceQuery] = useState<string>("");
   const [selectedQuery, setSelectedQuery] = useState<string>("A");
+  const [customQuery, setCustomQuery] = useState<string>("What is the capital of France?");
+  const [customMaxIterations, setCustomMaxIterations] = useState<number>(4);
   const [cleanStateBeforeRun, setCleanStateBeforeRun] = useState<boolean>(true);
   const [running, setRunning] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
@@ -85,6 +88,22 @@ function App() {
       setStateSummary(await fetchStateSummary());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to run query.");
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  async function handleRunCustomChat() {
+    setRunning(true);
+    setError("");
+    try {
+      const response = await runCustomChat(customQuery, customMaxIterations, cleanStateBeforeRun);
+      setRunResponse(response);
+      setSelectedTraceQuery(response.results[0]?.query_id ?? "");
+      setStateSummary(await fetchStateSummary());
+      setActiveTab("traces");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to run custom query.");
     } finally {
       setRunning(false);
     }
@@ -197,6 +216,33 @@ function App() {
       {!loading && activeTab === "runner" ? (
         <section className="panel">
           <h2>Live Runner</h2>
+          <h3>Custom live query</h3>
+          <label className="full-width">
+            Type any question
+            <textarea
+              rows={3}
+              value={customQuery}
+              onChange={(e) => setCustomQuery(e.target.value)}
+              placeholder="e.g. Remember my favorite color is blue"
+            />
+          </label>
+          <div className="row">
+            <label>
+              Max iterations
+              <input
+                type="number"
+                min={1}
+                max={16}
+                value={customMaxIterations}
+                onChange={(e) => setCustomMaxIterations(Number(e.target.value))}
+              />
+            </label>
+            <button type="button" onClick={handleRunCustomChat} disabled={running || !customQuery.trim()}>
+              {running ? "Running..." : "Run Custom Query"}
+            </button>
+          </div>
+
+          <h3>Assignment target queries</h3>
           <div className="row">
             <label>
               Query

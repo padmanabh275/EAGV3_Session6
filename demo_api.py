@@ -12,6 +12,7 @@ from demo_schemas import (
     ProjectModuleInfo,
     ResetStateResponse,
     RunAllRequest,
+    RunChatRequest,
     RunQueryRequest,
     RunResponse,
     StateSummaryResponse,
@@ -111,6 +112,20 @@ async def run_query(payload: RunQueryRequest) -> RunResponse:
     )
 
 
+@app.post("/api/run/chat", response_model=RunResponse)
+async def run_chat(payload: RunChatRequest) -> RunResponse:
+    result = await agent6.run_adhoc_query(
+        payload.query,
+        max_iterations=payload.max_iterations,
+        clean_state=payload.clean_state,
+    )
+    return RunResponse(
+        results=[result],
+        overall_pass=result.passed,
+        ran_at=datetime.now(timezone.utc),
+    )
+
+
 @app.post("/api/run/all", response_model=RunResponse)
 async def run_all(payload: RunAllRequest) -> RunResponse:
     results = await agent6.run_targets(agent6.ALL_QUERY_SEQUENCE, clean_state=payload.clean_state)
@@ -140,4 +155,4 @@ async def state_reset() -> ResetStateResponse:
 
 
 if __name__ == "__main__":
-    uvicorn.run("demo_api:app", host="0.0.0.0", port=8110, reload=False)
+    uvicorn.run("demo_api:app", host="0.0.0.0", port=8110, reload=True)

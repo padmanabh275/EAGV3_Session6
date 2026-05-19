@@ -21,6 +21,22 @@ export function runSingleQuery(queryId: string, cleanState: boolean): Promise<Ru
   });
 }
 
+export function runCustomChat(
+  query: string,
+  maxIterations: number,
+  cleanState: boolean,
+): Promise<RunResponse> {
+  return requestJson<RunResponse>("/api/run/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      query,
+      max_iterations: maxIterations,
+      clean_state: cleanState,
+    }),
+  });
+}
+
 export function runAllQueries(cleanState: boolean): Promise<RunResponse> {
   return requestJson<RunResponse>("/api/run/all", {
     method: "POST",

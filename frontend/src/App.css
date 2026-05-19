@@ -82,12 +82,31 @@ label {
 
 select,
 button,
-input[type="text"] {
+input[type="text"],
+input[type="number"],
+textarea {
   background: #1f2937;
   color: #e5edf8;
   border: 1px solid #334155;
   border-radius: 8px;
   padding: 8px 10px;
+}
+
+label.full-width {
+  width: 100%;
+  margin-top: 12px;
+}
+
+label.full-width textarea {
+  width: 100%;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.panel h3 {
+  margin: 16px 0 8px;
+  color: #93c5fd;
+  font-size: 1rem;
 }
 
 button {

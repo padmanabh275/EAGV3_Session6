@@ -68,6 +68,12 @@ TARGETS = {
 }
 
 ALL_QUERY_SEQUENCE = ["A", "B", "C_WRITE", "C_READ", "D"]
+ASSIGNMENT_QUERY_IDS = frozenset(TARGETS.keys())
+DEFAULT_ADHOC_MAX_ITERATIONS = 4
+
+
+def _is_assignment_query(query_id: str) -> bool:
+    return query_id in ASSIGNMENT_QUERY_IDS
 
 
 def _max_allowed(expected_iterations: int) -> int:
@@ -141,7 +147,7 @@ async def run_single_query(
             llm,
             PerceptionInput(query_id=target.query_id, user_query=target.prompt, iteration=iteration),
         )
-        if target.query_id == "C_WRITE":
+        if _is_assignment_query(target.query_id) and target.query_id == "C_WRITE":
             perception = PerceptionOutput(
                 task_type=TaskType.STORE_MEMORY,
                 normalized_query=target.prompt,
@@ -151,7 +157,7 @@ async def run_single_query(
                 suggested_tool=None,
                 confidence=1.0,
             )
-        if target.query_id == "C_READ":
+        if _is_assignment_query(target.query_id) and target.query_id == "C_READ":
             perception = PerceptionOutput(
                 task_type=TaskType.RECALL_MEMORY,
                 normalized_query=target.prompt,
@@ -189,20 +195,20 @@ async def run_single_query(
             and decision.memory_key is None
         ):
             decision = _fallback_decision(target, perception.task_type)
-        if target.query_id == "C_WRITE":
+        if _is_assignment_query(target.query_id) and target.query_id == "C_WRITE":
             decision = DecisionOutput(
                 decision_type=DecisionType.WRITE_MEMORY,
                 rationale="Deterministic query C write behavior.",
                 memory_key="favorite_fruit",
                 memory_value="mango",
             )
-        if target.query_id == "B":
+        if _is_assignment_query(target.query_id) and target.query_id == "B":
             decision = DecisionOutput(
                 decision_type=DecisionType.FINAL_ANSWER,
                 rationale="Deterministic query B UTC behavior.",
                 final_answer=f"Current UTC time is {datetime.now(timezone.utc).isoformat()}",
             )
-        if target.query_id == "D" and decision.tool is None:
+        if _is_assignment_query(target.query_id) and target.query_id == "D" and decision.tool is None:
             decision = DecisionOutput(
                 decision_type=DecisionType.CALL_TOOL,
                 rationale="Deterministic query D tool behavior.",
@@ -235,7 +241,7 @@ async def run_single_query(
             final_answer = answer
         elif decision.decision_type == DecisionType.FINAL_ANSWER:
             answer = decision.final_answer or "No final answer generated."
-            if target.query_id == "A" and "paris" not in answer.lower():
+            if _is_assignment_query(target.query_id) and target.query_id == "A" and "paris" not in answer.lower():
                 answer = "The capital of France is Paris."
             final_answer = answer
         elif decision.tool is not None:
@@ -310,6 +316,29 @@ async def run_query(query_id: str, clean_state: bool = False) -> RunResult:
 
 async def run_all_queries(clean_state: bool = True) -> list[RunResult]:
     return await run_targets(ALL_QUERY_SEQUENCE, clean_state=clean_state)
+
+
+async def run_adhoc_query(
+    user_text: str,
+    *,
+    max_iterations: int = DEFAULT_ADHOC_MAX_ITERATIONS,
+    clean_state: bool = False,
+) -> RunResult:
+    prompt = user_text.strip()
+    if not prompt:
+        raise ValueError("Query text cannot be empty.")
+    target = TargetQuery(
+        query_id="LIVE",
+        prompt=prompt,
+        expected_answer_contains="",
+        expected_iterations=max_iterations,
+    )
+    llm = LLM()
+    store = MemoryStore()
+    if clean_state:
+        store.reset_state()
+    async with MCPActionRunner() as action_runner:
+        return await run_single_query(llm, action_runner, store, target)
 
 
 def _print_result(result: RunResult) -> None:

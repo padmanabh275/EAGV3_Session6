@@ -35,6 +35,13 @@ class RunAllRequest(BaseModel):
     clean_state: bool = True
 
 
+class RunChatRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    query: str = Field(min_length=1)
+    max_iterations: int = Field(default=4, ge=1, le=16)
+    clean_state: bool = False
+
+
 class RunResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
     results: list[RunResult]
